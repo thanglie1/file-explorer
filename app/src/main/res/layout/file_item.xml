@@ -5,31 +5,31 @@
     <data>
         <variable
             name="model"
-            type="com.example.fileexplorer.FileModel" />
+            type="com.example.fileexplorer.model.FileModel" />
+
         <variable
             name="itemClickListener"
             type="com.example.fileexplorer.CustomClickListener" />
     </data>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/container"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="@{()->itemClickListener.cardClicked(model)}"
-        app:cardUseCompatPadding="true">
+        android:layout_height="60dp"
+        android:background="@color/grey_89"
+        android:onClick="@{()->itemClickListener.itemClicked(model)}"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_margin="5sp"
-            android:gravity="center_vertical"
+            android:layout_height="59dp"
             android:orientation="horizontal">
 
             <ImageView
                 android:id="@+id/img_fileType"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@{model.type == 0 ? @drawable/ic_folder : @drawable/ic_file}">
+                android:src="@{model.type == 0 ? @drawable/ic_folder : @drawable/ic_file}"
+                android:layout_gravity="center">
 
             </ImageView>
 
@@ -58,8 +58,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:layout_alignParentLeft="true"
-                        android:text="@{model.dateModified}"
                         android:layout_toStartOf="@id/tv_itemNumber"
+                        android:text="@{model.lastModified}"
                         android:textColor="@color/grey">
 
                     </TextView>
@@ -69,15 +69,24 @@
                         android:layout_width="70dp"
                         android:layout_height="match_parent"
                         android:layout_alignParentRight="true"
-                        android:text="@{model.info}"
                         android:gravity="right"
+                        android:text="@{model.info}"
                         android:textColor="@color/grey">
 
                     </TextView>
 
                 </RelativeLayout>
+
             </LinearLayout>
+
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+
+        <View
+            android:id="@+id/view_divider"
+            android:layout_width="280dp"
+            android:layout_height="2dp"
+            android:layout_gravity="center"
+            android:background="@android:color/darker_gray" />
+    </LinearLayout>
 </layout>
 

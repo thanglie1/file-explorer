@@ -1,13 +1,14 @@
-package com.example.fileexplorer;
+package com.example.fileexplorer.model;
 
-import android.widget.TextView;
-
-import androidx.databinding.BindingAdapter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class FileModel {
-    private String fileName, dateModified;
+    private String fileName;
     private int numberFiles;
     private String fileSize;
+    private long size ,dateModified;
     private int type;
     String path;
 
@@ -18,13 +19,19 @@ public class FileModel {
         return fileSize;
     }
 
-    public FileModel(int type, String path, String fileName, String dateModified, int numberFiles, String fileSize) {
+    public String getLastModified(){
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.US);
+        return sdf.format(new Date(dateModified));
+    }
+
+    public FileModel(int type, String path, String fileName, long dateModified, int numberFiles, long size, String fileSize) {
         this.type = type;
         this.path = path;
         this.fileName = fileName;
         this.dateModified = dateModified;
         this.numberFiles = numberFiles;
         this.fileSize = fileSize;
+        this.size = size;
     }
 
     public String getFileName() {
@@ -51,16 +58,24 @@ public class FileModel {
         this.path = path;
     }
 
-    public String getDateModified() {
+    public long getDateModified() {
         return dateModified;
     }
 
-    public void setDateModified(String dateModified) {
+    public void setDateModified(long dateModified) {
         this.dateModified = dateModified;
     }
 
     public int getNumberFiles() {
         return numberFiles;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
     }
 
     public void setNumberFiles(int numberFiles) {
