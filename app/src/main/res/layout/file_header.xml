@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <variable
@@ -23,7 +22,7 @@
             android:layout_height="wrap_content"
             android:padding="5dp"
             android:rotation="@{model.ascending == true ? 0 : 180}"
-            android:onClick="@{()-> itemClickListener.orderClicked(model)}"
+            android:onClick="@{()-> itemClickListener.orderClicked()}"
             android:src="@drawable/ic_order"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">

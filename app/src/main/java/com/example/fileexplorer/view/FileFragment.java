@@ -1,9 +1,6 @@
 package com.example.fileexplorer.view;
 
-import static androidx.core.content.ContextCompat.getSystemService;
-
 import android.Manifest;
-import android.app.SearchManager;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -14,22 +11,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.ActionProvider;
-import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 
-import com.example.fileexplorer.FileViewAdapter;
+import com.example.fileexplorer.adapter.FileViewAdapter;
+import com.example.fileexplorer.databinding.FragmentFileBinding;
 import com.example.fileexplorer.model.FileModel;
 import com.example.fileexplorer.R;
 import com.example.fileexplorer.model.SettingModel;
-import com.example.fileexplorer.databinding.FragmentSecondBinding;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -41,17 +37,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileFragment extends Fragment {
-    private FragmentSecondBinding binding;
-    File storage;
+    private FragmentFileBinding binding;
+    private File storage;
+    List<FileModel> fileModelList;
+    private SettingModel settingModel;
 
-    SettingModel settingModel;
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-
-        binding = FragmentSecondBinding.inflate(inflater, container, false);
+        setHasOptionsMenu(true);
+        binding = FragmentFileBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -71,10 +68,14 @@ public class FileFragment extends Fragment {
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         int sortType = preferences.getInt("sortType", 0);
+        int viewType = preferences.getInt("viewType", 0);
         boolean ascending = preferences.getBoolean("ascending", true);
-        settingModel = new SettingModel(sortType, ascending);
+        settingModel = new SettingModel(sortType, ascending, viewType);
 
         binding.tvHeader.setText(storage.getAbsolutePath());
+
+        ((MainActivity) getActivity()).setSupportActionBar(binding.myToolBar);
+        ((MainActivity) getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         if (!storage.getAbsolutePath().equals(System.getenv("EXTERNAL_STORAGE"))) {
             binding.myToolBar.setNavigationIcon(R.drawable.ic_back);
@@ -86,57 +87,42 @@ public class FileFragment extends Fragment {
             });
         }
 
-        binding.myToolBar.inflateMenu(R.menu.menu_secondary);
-        binding.myToolBar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                Toast.makeText(getContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
-//                ActionProvider actionProvider = MenuItemCompat.getActionProvider(item);
-                return true;
-//                SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
-//                searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-            }
-        });
-
         runtimePermission();
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        final MenuItem searchItem = menu.findItem(R.id.action_search);
-        if (searchItem != null) {
-            final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
-            searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-                @Override
-                public boolean onClose() {
-                    //some operation
-                    return true;
-                }
-            });
-            searchView.setOnSearchClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //some operation
-                }
-            });
-            // use this method for search process
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    // use this method when query submitted
-                    Toast.makeText(getContext(), query, Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    // use this method for auto complete search process
-                    return false;
-                }
-            });
-
-        }
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_setting, menu);
+        MenuItem item = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filter(newText);
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_list || item.getItemId() == R.id.action_grid) {
+            settingModel.setViewType(item.getOrder());
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            SharedPreferences.Editor prefEditor = preferences.edit();
+            prefEditor.putInt("viewType", item.getOrder());
+            prefEditor.commit();
+            filter("");
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -188,10 +174,32 @@ public class FileFragment extends Fragment {
     }
 
     private void displayFiles() {
-        List<FileModel> files = new ArrayList<>();
-        files.addAll(getFiles(storage));
+        fileModelList = new ArrayList<>();
+        fileModelList.addAll(getFiles(storage));
 
-        FileViewAdapter fileViewAdapter = new FileViewAdapter(getParentFragmentManager(), getContext(), files, settingModel);
+        updateAdapter(fileModelList);
+    }
+
+    private void filter(String newText) {
+        List<FileModel> filteredList = new ArrayList<>();
+        for (FileModel fm : fileModelList) {
+            if (fm.getFileName().toLowerCase().contains(newText.toLowerCase())) {
+                filteredList.add(fm);
+            }
+        }
+        updateAdapter(filteredList);
+    }
+
+    public void updateAdapter(List<FileModel> fileModels) {
+        FileViewAdapter fileViewAdapter = new FileViewAdapter(getParentFragmentManager(), getContext(), fileModels, settingModel);
+        ((GridLayoutManager) binding.recyclerView.getLayoutManager()).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (settingModel.getViewType() == SettingModel.LIST)
+                    return 3;
+                return position == 0 ? 3 : 1;
+            }
+        });
         binding.setCustomAdapter(fileViewAdapter);
     }
 }

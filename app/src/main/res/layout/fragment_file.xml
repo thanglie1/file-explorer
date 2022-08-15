@@ -9,7 +9,7 @@
 
         <variable
             name="customAdapter"
-            type="com.example.fileexplorer.FileViewAdapter" />
+            type="com.example.fileexplorer.adapter.FileViewAdapter" />
     </data>
 
     <LinearLayout
@@ -57,7 +57,8 @@
             android:layout_height="match_parent"
             android:visibility="@{customAdapter.itemCount == 0? View.GONE : View.VISIBLE}"
             android:adapter="@{customAdapter}"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+            app:spanCount="3"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager">
 
         </androidx.recyclerview.widget.RecyclerView>
 

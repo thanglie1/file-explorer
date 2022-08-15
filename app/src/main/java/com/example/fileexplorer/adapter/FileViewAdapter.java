@@ -1,25 +1,25 @@
-package com.example.fileexplorer;
+package com.example.fileexplorer.adapter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.fileexplorer.CustomClickListener;
+import com.example.fileexplorer.R;
 import com.example.fileexplorer.databinding.FileItemBinding;
 import com.example.fileexplorer.databinding.FileHeaderBinding;
+import com.example.fileexplorer.databinding.FileItemSmallBinding;
 import com.example.fileexplorer.enums.SortType;
 import com.example.fileexplorer.view.FileFragment;
 import com.example.fileexplorer.model.FileModel;
@@ -33,11 +33,12 @@ import java.util.List;
 public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements CustomClickListener {
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
+    private static final int TYPE_ITEM_SMALL = 2;
 
     private List<FileModel> fileModelList;
-    private SettingModel settingModel;
     private Context context;
     private FragmentManager fragmentManager;
+    private SettingModel settingModel;
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
         public FileItemBinding binding;
@@ -52,6 +53,15 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public FileHeaderBinding binding;
 
         public HeaderViewHolder(FileHeaderBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+    }
+
+    public class ItemSmallViewHolder extends RecyclerView.ViewHolder {
+        public FileItemSmallBinding binding;
+
+        public ItemSmallViewHolder(FileItemSmallBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -74,7 +84,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void headerClicked(View view) {
         //Do something
         PopupMenu popupMenu = new PopupMenu(context, view);
-        popupMenu.inflate(R.menu.menu_main);
+        popupMenu.inflate(R.menu.menu_sort);
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -94,12 +104,12 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
-    public void orderClicked(SettingModel sett) {
-        sett.setAscending(!sett.isAscending());
+    public void orderClicked() {
+        settingModel.setAscending(!settingModel.isAscending());
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor prefEditor = preferences.edit();
-        prefEditor.putBoolean("ascending", sett.isAscending());
+        prefEditor.putBoolean("ascending", settingModel.isAscending());
         prefEditor.commit();
 
         sort(settingModel.getSortType(), settingModel.isAscending());
@@ -111,7 +121,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.context = context;
         this.fileModelList = fileModelList;
         this.settingModel = settingModel;
-        sort(this.settingModel.getSortType(), settingModel.isAscending());
+        sort(settingModel.getSortType(), settingModel.isAscending());
     }
 
     @NonNull
@@ -124,6 +134,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             case TYPE_ITEM:
                 FileItemBinding itemBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.file_item, parent, false);
                 return new ItemViewHolder(itemBinding);
+            case TYPE_ITEM_SMALL:
+                FileItemSmallBinding itemSmallBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.file_item_small, parent, false);
+                return new ItemSmallViewHolder(itemSmallBinding);
         }
         return null;
     }
@@ -137,6 +150,10 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).binding.setModel(settingModel);
             ((HeaderViewHolder) holder).binding.setItemClickListener(this);
+        } else if (holder instanceof ItemSmallViewHolder) {
+            FileModel fileModel = fileModelList.get(position - 1);
+            ((ItemSmallViewHolder) holder).binding.setModel(fileModel);
+            ((ItemSmallViewHolder) holder).binding.setItemClickListener(this);
         }
     }
 
@@ -145,7 +162,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (position == 0) {
             return TYPE_HEADER;
         }
-        return TYPE_ITEM;
+        return settingModel.getViewType() == SettingModel.LIST ? TYPE_ITEM : TYPE_ITEM_SMALL;
     }
 
     @Override
@@ -175,7 +192,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         break;
                 }
                 if (!ascending) {
-                    result = result *(-1);
+                    result = result * (-1);
                 }
                 return result;
             }

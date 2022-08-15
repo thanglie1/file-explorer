@@ -8,5 +8,5 @@ import com.example.fileexplorer.model.SettingModel;
 public interface CustomClickListener {
     void itemClicked(FileModel f);
     void headerClicked(View view);
-    void orderClicked(SettingModel sett);
+    void orderClicked();
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="model"
+            type="com.example.fileexplorer.model.FileModel" />
+
+        <variable
+            name="itemClickListener"
+            type="com.example.fileexplorer.CustomClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@color/grey"
+            android:onClick="@{()->itemClickListener.itemClicked(model)}"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/img_fileType"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:src="@{model.type == 0 ? @drawable/ic_folder : @drawable/ic_file}">
+
+            </ImageView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:text="@{model.fileName}">
+
+            </TextView>
+        </LinearLayout>
+    </LinearLayout>
+</layout>
+

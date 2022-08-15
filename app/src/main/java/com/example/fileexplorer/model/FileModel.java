@@ -10,7 +10,7 @@ public class FileModel {
     private String fileSize;
     private long size ,dateModified;
     private int type;
-    String path;
+    private String path;
 
     public String getInfo() {
         if (type == 0) {
