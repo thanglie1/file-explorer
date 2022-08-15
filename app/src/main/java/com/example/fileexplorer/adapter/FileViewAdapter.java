@@ -38,7 +38,6 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private List<FileModel> fileModelList;
     private Context context;
     private FragmentManager fragmentManager;
-    private SettingModel settingModel;
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
         public FileItemBinding binding;
@@ -88,14 +87,14 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                settingModel.setSortType(item.getOrder());
+                SettingModel.getInstance().setSortType(item.getOrder());
 
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor prefEditor = preferences.edit();
                 prefEditor.putInt("sortType", item.getOrder());
                 prefEditor.commit();
 
-                sort(settingModel.getSortType(), settingModel.isAscending());
+                sort(SettingModel.getInstance().getSortType(), SettingModel.getInstance().isAscending());
                 notifyDataSetChanged();
                 return true;
             }
@@ -105,23 +104,23 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public void orderClicked() {
-        settingModel.setAscending(!settingModel.isAscending());
+        SettingModel.getInstance().setAscending(!SettingModel.getInstance().isAscending());
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor prefEditor = preferences.edit();
-        prefEditor.putBoolean("ascending", settingModel.isAscending());
+        prefEditor.putBoolean("ascending", SettingModel.getInstance().isAscending());
         prefEditor.commit();
 
-        sort(settingModel.getSortType(), settingModel.isAscending());
+        sort(SettingModel.getInstance().getSortType(), SettingModel.getInstance().isAscending());
         notifyDataSetChanged();
     }
 
-    public FileViewAdapter(FragmentManager fragmentManager, Context context, List<FileModel> fileModelList, SettingModel settingModel) {
+    public FileViewAdapter(FragmentManager fragmentManager, Context context, List<FileModel> fileModelList) {
         this.fragmentManager = fragmentManager;
         this.context = context;
         this.fileModelList = fileModelList;
-        this.settingModel = settingModel;
-        sort(settingModel.getSortType(), settingModel.isAscending());
+
+        sort(SettingModel.getInstance().getSortType(), SettingModel.getInstance().isAscending());
     }
 
     @NonNull
@@ -148,7 +147,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             ((ItemViewHolder) holder).binding.setModel(fileModel);
             ((ItemViewHolder) holder).binding.setItemClickListener(this);
         } else if (holder instanceof HeaderViewHolder) {
-            ((HeaderViewHolder) holder).binding.setModel(settingModel);
+            ((HeaderViewHolder) holder).binding.setModel(SettingModel.getInstance());
             ((HeaderViewHolder) holder).binding.setItemClickListener(this);
         } else if (holder instanceof ItemSmallViewHolder) {
             FileModel fileModel = fileModelList.get(position - 1);
@@ -162,7 +161,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (position == 0) {
             return TYPE_HEADER;
         }
-        return settingModel.getViewType() == SettingModel.LIST ? TYPE_ITEM : TYPE_ITEM_SMALL;
+        return SettingModel.getInstance().getViewType() == SettingModel.LIST ? TYPE_ITEM : TYPE_ITEM_SMALL;
     }
 
     @Override

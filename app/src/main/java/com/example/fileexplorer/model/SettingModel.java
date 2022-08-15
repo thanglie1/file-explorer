@@ -10,13 +10,15 @@ public class SettingModel {
     private boolean ascending;
     private int viewType;
 
-    public SettingModel(int sortType, boolean ascending, int viewType) {
-        this.sortType = sortType;
-        this.ascending = ascending;
-        this.viewType = viewType;
+    private static SettingModel settingModel = null;
+    public static  SettingModel getInstance() {
+        if (settingModel == null) {
+            settingModel = new SettingModel();
+        }
+        return settingModel;
     }
 
-    public SettingModel() {
+    private SettingModel() {
         this.sortType = 0;
         this.ascending = true;
         this.viewType = 0;

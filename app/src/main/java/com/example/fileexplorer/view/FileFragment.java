@@ -40,7 +40,6 @@ public class FileFragment extends Fragment {
     private FragmentFileBinding binding;
     private File storage;
     List<FileModel> fileModelList;
-    private SettingModel settingModel;
 
     @Override
     public View onCreateView(
@@ -70,7 +69,9 @@ public class FileFragment extends Fragment {
         int sortType = preferences.getInt("sortType", 0);
         int viewType = preferences.getInt("viewType", 0);
         boolean ascending = preferences.getBoolean("ascending", true);
-        settingModel = new SettingModel(sortType, ascending, viewType);
+        SettingModel.getInstance().setAscending(ascending);
+        SettingModel.getInstance().setSortType(sortType);
+        SettingModel.getInstance().setViewType(viewType);
 
         binding.tvHeader.setText(storage.getAbsolutePath());
 
@@ -114,7 +115,7 @@ public class FileFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_list || item.getItemId() == R.id.action_grid) {
-            settingModel.setViewType(item.getOrder());
+            SettingModel.getInstance().setViewType(item.getOrder());
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
             SharedPreferences.Editor prefEditor = preferences.edit();
             prefEditor.putInt("viewType", item.getOrder());
@@ -191,11 +192,11 @@ public class FileFragment extends Fragment {
     }
 
     public void updateAdapter(List<FileModel> fileModels) {
-        FileViewAdapter fileViewAdapter = new FileViewAdapter(getParentFragmentManager(), getContext(), fileModels, settingModel);
+        FileViewAdapter fileViewAdapter = new FileViewAdapter(getParentFragmentManager(), getContext(), fileModels);
         ((GridLayoutManager) binding.recyclerView.getLayoutManager()).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                if (settingModel.getViewType() == SettingModel.LIST)
+                if (SettingModel.getInstance().getViewType() == SettingModel.LIST)
                     return 3;
                 return position == 0 ? 3 : 1;
             }
